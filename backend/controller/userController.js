@@ -4,12 +4,19 @@ import jwt from "jsonwebtoken"
 
 export const register = async(req,res) =>{
     try {
-        const {fullname,email,phoneNumber,password,role} = req.body;
+        const {fullname,email,phoneNumber,password,role,subject,branch,year} = req.body;
+
         if(!fullname || !email || !password || !phoneNumber || !role){
             return res.status(400).json({
                 message: "Please fill all fields",
                 suceess:"false"
             })
+        }
+        const userData = {fullname,email,role};
+        if(role == 'teacher'){userData.subject = subject};
+        if(role == 'student'){
+            userData.branch = branch;
+            userData.year = year;
         }
         const user = await User.findOne({email});
         if(user){
@@ -19,13 +26,11 @@ export const register = async(req,res) =>{
             })
         }
         const hashedPassword = await bcrypt.hash(password,10);
-        await User.create({
-            fullname,
-            email,
-            phoneNumber,
-            password:hashedPassword,
-            role
-        });
+        userData.password = hashedPassword;
+        
+        const newUser = new User(userData);
+        await newUser.save();
+
         return res.status(201).json({
             message: "User created successfully",
             success: true
@@ -67,12 +72,25 @@ export const login = async(req,res)=>{
             userId : user._id
         }
         const token = await jwt.sign(tokenData,process.env.SECRET_KEY,{expiresIn :'1d'})
+        let additionalData ={};
+        if(role === 'teacher'){
+            additionalData ={subject : user.subject};
+        }
+        else if(role === 'student'){
+            additionalData = {
+                branch:user.branch, year: user.year
+            }
+        };
+
+
         user = {
             _id : user._id,
             fullname : user.fullname,
             email : user.email,
             role : user.role,
-            phoneNumber : user.phoneNumber
+            phoneNumber : user.phoneNumber,
+            ...additionalData
+
         }
         return res.status(200).cookie("token",token,{maxAge :1*24*60*60*1000,httpsOnly:true,sameSite:'strict'}).json({
             message:`welcome back ${user.fullname}`,

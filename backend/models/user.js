@@ -22,6 +22,27 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ['student','teacher'],
         required : true,
+    },
+    // field for teacher
+    subject:{
+        type:String,
+        required : function(){
+            return this.role === 'teacher';
+        }
+    },
+    // field for student
+    branch:{
+        type:String,
+        required : function(){
+            return this.role === 'student';
+        }
+    },
+    year:{
+        type:Number,
+        min:1, max:4,
+        required : function(){
+            return this.role === 'student';
+        }
     }
 },{timestamps: true});
 
