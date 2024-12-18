@@ -5,14 +5,13 @@ import jwt from "jsonwebtoken"
 export const register = async(req,res) =>{
     try {
         const {fullname,email,phoneNumber,password,role,subject,branch,year} = req.body;
-
         if(!fullname || !email || !password || !phoneNumber || !role){
             return res.status(400).json({
                 message: "Please fill all fields",
                 suceess:"false"
             })
         }
-        const userData = {fullname,email,role};
+        const userData = {fullname,email,phoneNumber,role};
         if(role == 'teacher'){userData.subject = subject};
         if(role == 'student'){
             userData.branch = branch;
